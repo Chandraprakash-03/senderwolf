@@ -1,4 +1,4 @@
-# senderwolf
+# senderwolf [![npm version](https://img.shields.io/npm/v/senderwolf)](https://www.npmjs.com/package/senderwolf)
 
 > Lightweight, secure Gmail SMTP sender for Node.js
 
