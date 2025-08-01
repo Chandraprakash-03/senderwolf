@@ -1,92 +1,103 @@
-# senderwolf [![npm version](https://img.shields.io/npm/v/senderwolf)](https://www.npmjs.com/package/senderwolf)
+# senderwolf
 
-> Lightweight, secure Gmail SMTP sender for Node.js
+> 🐺 The simplest way to send emails from your terminal — via Gmail or any SMTP.
 
-**senderwolf** lets you dynamically send emails with attachments using Gmail SMTP.  
-Built for developers who want full control without hardcoded credentials — now with input validation, performance optimization, and a minimal setup.
+**Senderwolf** is a tiny email-sending tool with both **CLI** and **JS support**. It lets you send HTML emails with attachments using Gmail SMTP or other providers.
 
 ---
 
 ## Install
 
 ```bash
-npm install senderwolf
+npm install senderwolf -g
 ```
 
 ---
 
-## Usage
+## Usage (CLI)
+
+### Basic CLI Example
+
+```bash
+senderwolf --user your@gmail.com --pass yourapppass \
+  --to someone@example.com \
+  --subject "Hi there" \
+  --html "<h1>Hello</h1>"
+```
+
+### Send an HTML file
+
+```bash
+senderwolf --user your@gmail.com --pass yourapppass \
+  --to someone@example.com \
+  --subject "Yo" \
+  --html ./email.html
+```
+
+### With attachments
+
+```bash
+senderwolf --user your@gmail.com --pass yourapppass \
+  --to someone@example.com \
+  --subject "With files" \
+  --html "<p>See attached</p>" \
+  --attachments "./file.pdf,./logo.png"
+```
+
+---
+
+## Interactive Mode
+
+use `--interactive`:
+
+```bash
+senderwolf --interactive
+```
+
+You'll be prompted for all the fields step-by-step.
+
+---
+
+## Dry Run
+
+Preview the SMTP config and email content without sending:
+
+```bash
+senderwolf --dry-run ...
+```
+
+---
+
+## Usage in Code
 
 ```js
 import { sendEmail } from "senderwolf";
 
 await sendEmail({
-	auth: {
-		user: "your-email@gmail.com",
-		pass: "your-app-password",
+	smtp: {
+		auth: {
+			user: "your@gmail.com",
+			pass: "your-app-password",
+		},
 	},
 	mail: {
-		fromName: "Your Name",
-		fromEmail: "your-email@gmail.com",
-		to: "receiver@example.com",
-		subject: "Hello",
-		html: "<h1>Hi there!</h1>",
-		attachments: [{ filename: "invoice.pdf", path: "./invoice.pdf" }],
+		to: "target@example.com",
+		subject: "Hello!",
+		html: "<h1>Hi there</h1>",
+		attachments: [{ filename: "file.pdf", path: "./file.pdf" }],
 	},
 });
 ```
 
 ---
 
-## Gmail Setup Required
+## Notes
 
-You **must use an App Password**, not your regular Gmail login.
-
-🔐 Follow these steps:
-
-1. Turn on 2-Step Verification for your Google account.
-2. Create an [App Password](https://support.google.com/accounts/answer/185833?hl=en).
-3. Use that app password as `auth.pass`.
-
----
-
-## Features
-
-- 🔒 Fully dynamic credentials (no hardcoded SMTP)
-- 🧾 HTML emails with attachments
-- 🧪 Input validation with [Zod](https://zod.dev)
-- 🚀 Optimized transport connection pooling
-- 🧰 Developer-first API — clean and extensible
-
----
-
-## Example with Attachments
-
-```js
-attachments: [
-	{
-		filename: "report.pdf",
-		path: "./files/report.pdf",
-	},
-	{
-		filename: "logo.png",
-		path: "https://example.com/logo.png",
-	},
-];
-```
-
----
-
-## Coming Soon
-
-- CLI: `senderwolf send ...`
-- Template support (Handlebars, EJS)
-- Webhook-ready version for serverless
+- Requires a **Gmail App Password** (not your main login password).
+- Supports Gmail and other SMTP hosts like Outlook, Zoho, etc.
 
 ---
 
 ## License
 
 MIT © 2025 [Chandraprakash](https://github.com/Chandraprakash-03)
-
----
