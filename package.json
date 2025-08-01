@@ -24,6 +24,11 @@
         "nodemailer": "^6.10.1",
         "zod": "^3.22.2"
     },
+    "files": [
+        "lib",
+        "bin",
+        "index.js"
+    ],
     "repository": {
         "type": "git",
         "url": "https://github.com/Chandraprakash-03/senderwolf"
