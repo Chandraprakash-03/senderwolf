@@ -25,19 +25,20 @@ Examples:
     --attachments "invoice.pdf,logo.png"
 `
     )
-    .option("--user <email>", "SMTP username (Gmail or other)")
-    .option("--pass <password>", "SMTP password or app password")
-    .option("--to <email>", "Recipient email")
-    .option("--subject <text>", "Email subject")
-    .option("--html <html>", "HTML content or path to .html file")
-    .option("--host <host>", "SMTP host (default: smtp.gmail.com)")
-    .option("--port <port>", "SMTP port (default: 465)", parseInt)
-    .option("--secure", "Use SSL (default: true)", true)
-    .option("--fromName <name>", "Sender name (default: Senderwolf)")
-    .option("--fromEmail <email>", "Sender email (default: --user)")
-    .option("--attachments <paths>", "Comma-separated file paths")
-    .option("--interactive", "Launch interactive mode")
-    .option("--dry-run", "Preview email without sending it")
+    .option("-u, --user <email>", "SMTP username (Gmail or other)")
+    .option("-p, --pass <password>", "SMTP password or app password")
+    .option("-t, --to <email>", "Recipient email")
+    .option("-s, --subject <text>", "Email subject")
+    .option("-h, --html <html>", "HTML content or path to .html file")
+    .option("-x, --text <text>", "Plain text content (optional, overrides HTML if provided)")
+    .option("-H, --host <host>", "SMTP host (default: smtp.gmail.com)")
+    .option("-P, --port <port>", "SMTP port (default: 465)", parseInt)
+    .option("-S, --secure <bool>", "Use SSL (default: true)", (value) => value === "true", true)
+    .option("-n, --fromName <name>", "Sender name (default: Senderwolf)")
+    .option("-e, --fromEmail <email>", "Sender email (default: --user)")
+    .option("-a, --attachments <paths>", "Comma-separated file paths")
+    .option("-i, --interactive", "Launch interactive mode")
+    .option("-d, --dry-run", "Preview email without sending it", false)
     .showHelpAfterError()
     .showSuggestionAfterError()
     .parse();
@@ -70,7 +71,7 @@ if (useInteractive) {
 
     let html = answers.html;
     try {
-        if (fs.existsSync(html) && html.endsWith(".html")) {
+        if (typeof html === "string" && fs.existsSync(html) && html.endsWith(".html")) {
             html = fs.readFileSync(html, "utf-8");
         }
     } catch {
@@ -103,7 +104,7 @@ if (useInteractive) {
         fromEmail: answers.user,
     };
 } else {
-    if (!opts.user || !opts.pass || !opts.to || !opts.subject || !opts.html) {
+    if (!opts.user || !opts.pass || !opts.to || !opts.subject || (!opts.html && !opts.text)) {
         console.log(chalk.red("❌ Missing required options.\n"));
         program.outputHelp();
         process.exit(1);
@@ -111,7 +112,7 @@ if (useInteractive) {
 
     let html = opts.html;
     try {
-        if (fs.existsSync(html) && html.endsWith(".html")) {
+        if (typeof html === "string" && fs.existsSync(html) && html.endsWith(".html")) {
             html = fs.readFileSync(html, "utf-8");
         }
     } catch {
@@ -138,7 +139,8 @@ if (useInteractive) {
     mail = {
         to: opts.to,
         subject: opts.subject,
-        html,
+        html: opts.text ? undefined : html,
+        text: opts.text || undefined,
         attachments,
         fromName: opts.fromName || "Senderwolf",
         fromEmail: opts.fromEmail || opts.user,
@@ -156,6 +158,7 @@ if (opts.dryRun) {
         from: mail.fromEmail || smtp.auth.user,
         subject: mail.subject,
         html: mail.html,
+        text: mail.text,
         attachments,
     });
     process.exit(0);
