@@ -5,13 +5,14 @@ import chalk from "chalk";
 import fs from "fs";
 import inquirer from "inquirer";
 import { sendEmail } from "../lib/sendEmail.js";
+import { loadConfig } from "../lib/config.js";
 
 const program = new Command();
 
 program
     .name("senderwolf")
     .description("📨 The simplest way to send emails via SMTP from your terminal.")
-    .version("2.0.0", "-v, --version", "Display senderwolf CLI version")
+    .version("2.0.4", "-v, --version", "Display senderwolf CLI version")
     .usage("[options]")
     .addHelpText(
         "after",
@@ -46,6 +47,28 @@ Examples:
 const opts = program.opts();
 const useInteractive = opts.interactive || Object.keys(opts).length === 0;
 
+const config = await loadConfig();
+console.log("Loaded config:", config);
+
+const merged = {
+    user: opts.user || config.user,
+    pass: opts.pass || config.pass,
+    to: opts.to,
+    subject: opts.subject,
+    html: opts.html,
+    text: opts.text,
+    host: opts.host || config.host || "smtp.gmail.com",
+    port: opts.port || config.port || 465,
+    secure:
+        typeof opts.secure === "boolean"
+            ? opts.secure
+            : (String(config.secure).toLowerCase() === "false" ? false : true),
+    fromName: opts.fromName || config.fromName || "Senderwolf",
+    fromEmail: opts.fromEmail || config.fromEmail || opts.user || config.user,
+    attachments: opts.attachments,
+    interactive: opts.interactive,
+    dryRun: opts.dryRun,
+};
 let smtp = {};
 let mail = {};
 let attachments = [];
@@ -104,13 +127,13 @@ if (useInteractive) {
         fromEmail: answers.user,
     };
 } else {
-    if (!opts.user || !opts.pass || !opts.to || !opts.subject || (!opts.html && !opts.text)) {
+    if (!merged.user || !merged.pass || !merged.to || !merged.subject || (!merged.html && !merged.text)) {
         console.log(chalk.red("❌ Missing required options.\n"));
         program.outputHelp();
         process.exit(1);
     }
 
-    let html = opts.html;
+    let html = merged.html;
     try {
         if (typeof html === "string" && fs.existsSync(html) && html.endsWith(".html")) {
             html = fs.readFileSync(html, "utf-8");
@@ -119,36 +142,36 @@ if (useInteractive) {
         // Use as string
     }
 
-    attachments = opts.attachments
-        ? opts.attachments.split(",").map((path) => ({
+    attachments = merged.attachments
+        ? merged.attachments.split(",").map((path) => ({
             filename: path.split("/").pop(),
             path,
         }))
         : [];
 
     smtp = {
-        host: opts.host || "smtp.gmail.com",
-        port: opts.port || 465,
-        secure: opts.secure,
+        host: merged.host || "smtp.gmail.com",
+        port: merged.port || 465,
+        secure: merged.secure,
         auth: {
-            user: opts.user,
-            pass: opts.pass,
+            user: merged.user,
+            pass: merged.pass,
         },
     };
 
     mail = {
-        to: opts.to,
-        subject: opts.subject,
-        html: opts.text ? undefined : html,
-        text: opts.text || undefined,
+        to: merged.to,
+        subject: merged.subject,
+        html: merged.text ? undefined : html,
+        text: merged.text || undefined,
         attachments,
-        fromName: opts.fromName || "Senderwolf",
-        fromEmail: opts.fromEmail || opts.user,
+        fromName: merged.fromName || "Senderwolf",
+        fromEmail: merged.fromEmail || merged.user,
     };
 }
 
 // 🧪 Dry-run mode
-if (opts.dryRun) {
+if (merged.dryRun) {
     console.log(chalk.yellow("🚫 Dry run mode enabled — no email sent.\n"));
     console.log(chalk.cyan("📬 SMTP Config:"));
     console.log(smtp);
