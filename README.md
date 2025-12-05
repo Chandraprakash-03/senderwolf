@@ -1,9 +1,11 @@
 # senderwolf
 
-> 🐺 The simplest way to send emails from your terminal — via Gmail or any SMTP.
+> 🐺 Standalone SMTP library - send emails without nodemailer or any third-party SMTP dependencies.
 
-**Senderwolf** is a tiny email-sending tool with both **CLI** and **JS support**.  
-It lets you send HTML/text emails with attachments using Gmail SMTP or other providers.
+**Senderwolf** is a lightweight email-sending tool with both **CLI** and **JS support**.  
+Built with native Node.js modules, it sends HTML/text emails with attachments using Gmail SMTP or any SMTP provider.
+
+**✨ v3.0.0 - Now completely standalone!** No more nodemailer dependency - pure Node.js implementation.
 
 ---
 
