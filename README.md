@@ -1,130 +1,584 @@
-# senderwolf
+# 🐺 Senderwolf
 
-> 🐺 Standalone SMTP library - send emails without nodemailer or any third-party SMTP dependencies.
+> **The simplest way to send emails in Node.js** - Powerful, intuitive, and built for modern developers.
 
-**Senderwolf** is a lightweight email-sending tool with both **CLI** and **JS support**.  
-Built with native Node.js modules, it sends HTML/text emails with attachments using Gmail SMTP or any SMTP provider.
+[![npm version](https://badge.fury.io/js/senderwolf.svg)](https://www.npmjs.com/package/senderwolf)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**✨ v3.0.0 - Now completely standalone!** No more nodemailer dependency - pure Node.js implementation.
+**Senderwolf** makes email sending **ridiculously simple**. Built from the ground up with an intuitive API, automatic provider detection, and zero configuration for popular email services.
 
----
+## ✨ Key Features
 
-## Install
-
-```bash
-npm install senderwolf -g
-```
-
----
-
-## Usage (CLI)
-
-### Basic CLI Example
-
-```bash
-senderwolf --user your@gmail.com --pass yourapppass   --to someone@example.com   --subject "Hi there"   --html "<h1>Hello</h1>"
-```
-
-### Send an HTML file
-
-```bash
-senderwolf --user your@gmail.com --pass yourapppass   --to someone@example.com   --subject "Yo"   --html ./email.html
-```
-
-### With attachments
-
-```bash
-senderwolf --user your@gmail.com --pass yourapppass   --to someone@example.com   --subject "With files"   --html "<p>See attached</p>"   --attachments "./file.pdf,./logo.png"
-```
+- ✅ **One-liner email sending** - Send emails with a single function call
+- ✅ **Auto-provider detection** - Just provide your email, we handle the rest
+- ✅ **Built-in provider presets** - 13+ popular email services ready to use
+- ✅ **Zero SMTP dependencies** - Pure Node.js implementation
+- ✅ **Modern authentication** - OAuth2, XOAUTH2, and traditional methods
+- ✅ **Extensible architecture** - Add any SMTP provider instantly
+- ✅ **Full email features** - CC/BCC, attachments, custom headers, priority
+- ✅ **Clear error messages** - Actionable feedback for troubleshooting
 
 ---
 
-## Config File Support (v2.0.4+)
+## 🚀 Quick Start
 
-You can avoid typing your SMTP credentials every time by creating a config file.  
-Senderwolf looks for `.senderwolfrc.json` in your **project root** (and falls back to your home directory).
-
-### Example `.senderwolfrc.json`
-
-```json
-{
-	"user": "your@gmail.com",
-	"pass": "your-app-password",
-	"host": "smtp.gmail.com",
-	"port": 465,
-	"secure": true,
-	"fromName": "Senderwolf",
-	"fromEmail": "your@gmail.com"
-}
-```
-
-Now you can send emails without retyping credentials:
+### Installation
 
 ```bash
-senderwolf -t someone@example.com -s "Hello" -x "Email sent using config 🎉"
+npm install senderwolf
 ```
 
-### CLI flags override config values.
+### Send Your First Email (3 Ways)
 
-```bash
-senderwolf -t person@example.com -s "Custom Sender" -n "Alice"
+#### 1. **Super Simple** (One-liner)
+
+```js
+import { sendGmail } from "senderwolf";
+
+await sendGmail(
+	"your@gmail.com",
+	"app-password",
+	"to@example.com",
+	"Hello!",
+	"<h1>World!</h1>"
+);
 ```
 
----
-
-## Interactive Mode
-
-Use `--interactive`:
-
-```bash
-senderwolf --interactive
-```
-
-You'll be prompted for all the fields step-by-step.
-
----
-
-## Dry Run
-
-Preview the SMTP config and email content without sending:
-
-```bash
-senderwolf --dry-run ...
-```
-
----
-
-## Usage in Code
+#### 2. **Auto-Detection** (Just provide your email)
 
 ```js
 import { sendEmail } from "senderwolf";
 
 await sendEmail({
 	smtp: {
-		auth: {
-			user: "your@gmail.com",
-			pass: "your-app-password",
-		},
+		auth: { user: "your@outlook.com", pass: "password" }, // Auto-detects Outlook!
 	},
 	mail: {
-		to: "target@example.com",
+		to: "recipient@example.com",
+		subject: "Hello from Senderwolf!",
+		html: "<h1>No SMTP configuration needed!</h1>",
+	},
+});
+```
+
+#### 3. **Reusable Mailer** (For multiple emails)
+
+```js
+import { createMailer } from "senderwolf";
+
+const mailer = createMailer({
+	smtp: {
+		provider: "gmail",
+		auth: { user: "your@gmail.com", pass: "app-password" },
+	},
+});
+
+await mailer.sendHtml("to@example.com", "Subject", "<h1>Hello World!</h1>");
+```
+
+---
+
+## 🌐 Supported Providers
+
+### **Built-in Support** (No configuration needed!)
+
+- **Gmail** - `gmail`
+- **Outlook/Hotmail/Live** - `outlook`
+- **Yahoo** - `yahoo`
+- **Zoho** - `zoho`
+- **Amazon SES** - `ses`
+- **SendGrid** - `sendgrid`
+- **Mailgun** - `mailgun`
+- **Postmark** - `postmark`
+- **Mailjet** - `mailjet`
+- **Mailtrap** - `mailtrap`
+- **Resend** - `resend`
+- **Brevo** - `brevo`
+- **ConvertKit** - `convertkit`
+
+### **Plus Any Custom SMTP Server**
+
+```js
+await sendEmail({
+	smtp: {
+		host: "mail.your-domain.com",
+		port: 587,
+		secure: false,
+		requireTLS: true,
+		auth: { user: "noreply@your-domain.com", pass: "password" },
+	},
+	mail: {
+		/* ... */
+	},
+});
+```
+
+### **🔧 Easily Add New Providers**
+
+```js
+import { registerProvider } from "senderwolf";
+
+// Add any new email service instantly
+registerProvider("newservice", {
+	host: "smtp.newservice.com",
+	port: 587,
+	secure: false,
+	requireTLS: true,
+});
+
+// Use it immediately
+await sendEmail({
+	smtp: {
+		provider: "newservice",
+		auth: { user: "you@newservice.com", pass: "pass" },
+	},
+	mail: {
+		to: "user@example.com",
 		subject: "Hello!",
-		html: "<h1>Hi there</h1>",
-		attachments: [{ filename: "file.pdf", path: "./file.pdf" }],
+		html: "<h1>It works!</h1>",
 	},
 });
 ```
 
 ---
 
-## Notes
+## 📧 Full Email Features
 
-- Requires a **Gmail App Password** (not your main login password for Gmail).
-- Supports Gmail and other SMTP hosts like Outlook, Zoho, Mailtrap, etc.
-- Config file makes repeated usage much simpler.
+### **Multiple Recipients**
+
+```js
+await sendEmail({
+	smtp: {
+		provider: "gmail",
+		auth: { user: "your@gmail.com", pass: "app-password" },
+	},
+	mail: {
+		to: ["user1@example.com", "user2@example.com"],
+		cc: "manager@example.com",
+		bcc: ["audit@example.com", "backup@example.com"],
+		subject: "Team Update",
+		html: "<h1>Important announcement</h1>",
+	},
+});
+```
+
+### **Attachments** (Files, Buffers, Streams)
+
+```js
+await sendEmail({
+	smtp: {
+		provider: "gmail",
+		auth: { user: "your@gmail.com", pass: "app-password" },
+	},
+	mail: {
+		to: "recipient@example.com",
+		subject: "Files attached",
+		html: "<p>Please find the attached files.</p>",
+		attachments: [
+			{ filename: "document.pdf", path: "./files/document.pdf" },
+			{ filename: "data.json", content: JSON.stringify({ data: "value" }) },
+			{ filename: "buffer.txt", content: Buffer.from("Hello World!") },
+		],
+	},
+});
+```
+
+### **Advanced Options**
+
+```js
+await sendEmail({
+	smtp: {
+		provider: "gmail",
+		auth: { user: "your@gmail.com", pass: "app-password" },
+	},
+	mail: {
+		to: "recipient@example.com",
+		replyTo: "support@example.com",
+		subject: "Advanced Email",
+		html: "<h1>Professional Email</h1>",
+		priority: "high",
+		headers: {
+			"X-Custom-Header": "Custom Value",
+			"X-Mailer": "Senderwolf",
+		},
+	},
+});
+```
 
 ---
 
-## License
+## 🔐 Authentication Methods
+
+### **Basic Authentication** (Most common)
+
+```js
+auth: {
+    user: 'your@gmail.com',
+    pass: 'your-app-password',
+    type: 'login' // Default
+}
+```
+
+### **OAuth2** (Recommended for production)
+
+```js
+auth: {
+    type: 'oauth2',
+    user: 'your@gmail.com',
+    clientId: 'your-client-id',
+    clientSecret: 'your-client-secret',
+    refreshToken: 'your-refresh-token'
+}
+```
+
+### **XOAUTH2** (Modern apps)
+
+```js
+auth: {
+    type: 'xoauth2',
+    user: 'your@gmail.com',
+    accessToken: 'your-access-token'
+}
+```
+
+---
+
+## ⚡ Simple API Methods
+
+### **One-Liner Functions**
+
+```js
+import { sendGmail, sendOutlook, quickSend } from "senderwolf";
+
+// Gmail shortcut
+await sendGmail(
+	"your@gmail.com",
+	"app-password",
+	"to@example.com",
+	"Subject",
+	"<h1>HTML</h1>"
+);
+
+// Outlook shortcut
+await sendOutlook(
+	"your@outlook.com",
+	"password",
+	"to@example.com",
+	"Subject",
+	"Text content"
+);
+
+// Any provider
+await quickSend(
+	"sendgrid",
+	"apikey",
+	"your-api-key",
+	"to@example.com",
+	"Subject",
+	"<h1>HTML</h1>"
+);
+```
+
+### **Reusable Mailer**
+
+```js
+import { createMailer } from "senderwolf";
+
+const mailer = createMailer({
+	smtp: {
+		provider: "gmail",
+		auth: { user: "your@gmail.com", pass: "app-password" },
+	},
+	defaults: { fromName: "My App", replyTo: "support@myapp.com" },
+});
+
+// Simple methods
+await mailer.sendHtml("user@example.com", "Welcome!", "<h1>Welcome!</h1>");
+await mailer.sendText("user@example.com", "Reset Code", "Your code: 123456");
+
+// With attachments
+await mailer.sendWithAttachments(
+	"user@example.com",
+	"Invoice",
+	"<p>Your invoice is attached.</p>",
+	[{ filename: "invoice.pdf", path: "./invoice.pdf" }]
+);
+
+// Bulk sending
+const results = await mailer.sendBulk(
+	["user1@example.com", "user2@example.com"],
+	"Newsletter",
+	"<h1>Monthly Update</h1>"
+);
+```
+
+---
+
+## 🛠️ Configuration
+
+### **Config File** (Recommended)
+
+Create `.senderwolfrc.json` in your project root:
+
+```json
+{
+	"provider": "gmail",
+	"user": "your@gmail.com",
+	"pass": "your-app-password",
+	"fromName": "My Application",
+	"fromEmail": "your@gmail.com",
+	"replyTo": "support@myapp.com",
+
+	"customProviders": {
+		"mycompany": {
+			"host": "smtp.mycompany.com",
+			"port": 587,
+			"secure": false,
+			"requireTLS": true
+		}
+	},
+
+	"customDomains": {
+		"mycompany.com": "mycompany"
+	}
+}
+```
+
+Now send emails with minimal code:
+
+```js
+await sendEmail({
+	mail: {
+		to: "user@example.com",
+		subject: "Using Config",
+		html: "<p>SMTP settings loaded automatically!</p>",
+	},
+});
+```
+
+---
+
+## 🔍 Testing & Debugging
+
+### **Test Connection**
+
+```js
+import { testConnection } from "senderwolf";
+
+const result = await testConnection({
+	smtp: {
+		provider: "gmail",
+		auth: { user: "your@gmail.com", pass: "app-password" },
+	},
+});
+
+console.log(result.success ? "Connected!" : "Failed:", result.message);
+```
+
+### **Debug Mode**
+
+```js
+await sendEmail({
+	smtp: {
+		provider: "gmail",
+		debug: true, // Enable detailed logging
+		auth: { user: "your@gmail.com", pass: "app-password" },
+	},
+	mail: {
+		/* ... */
+	},
+});
+```
+
+### **Provider Discovery**
+
+```js
+import { listProviders, suggestSMTPSettings } from "senderwolf";
+
+// List all available providers
+console.log(listProviders());
+
+// Get suggestions for unknown domains
+console.log(suggestSMTPSettings("newcompany.com"));
+```
+
+---
+
+## 🚀 CLI Usage
+
+### **Basic Commands**
+
+```bash
+# Simple email with auto-detection
+senderwolf --user your@gmail.com --pass yourapppass --to someone@example.com --subject "Hello" --html "<h1>World!</h1>"
+
+# Use provider preset
+senderwolf --provider gmail --user your@gmail.com --pass yourapppass --to person@xyz.com --subject "Hello" --html ./email.html
+
+# Multiple recipients with CC/BCC
+senderwolf --user your@outlook.com --pass password --to "user1@example.com,user2@example.com" --cc manager@example.com --bcc audit@example.com --subject "Team Update" --html "<h1>Update</h1>"
+
+# With attachments and priority
+senderwolf --provider sendgrid --user apikey --pass your-api-key --to customer@example.com --subject "Invoice" --html ./invoice.html --attachments "invoice.pdf,receipt.png" --priority high
+
+# Interactive mode (guided setup)
+senderwolf --interactive
+
+# Dry run (preview without sending)
+senderwolf --dry-run --provider gmail --user your@gmail.com --pass yourapppass --to user@example.com --subject "Test" --html "<h1>Preview</h1>"
+```
+
+### **Utility Commands**
+
+```bash
+# Test SMTP connection
+senderwolf --test --provider gmail --user your@gmail.com --pass yourapppass
+
+# List all available providers
+senderwolf --list-providers
+
+# Get SMTP suggestions for a domain
+senderwolf --suggest mycompany.com
+
+# Show configuration file example
+senderwolf --config-example
+
+# Debug mode (detailed logging)
+senderwolf --debug --provider gmail --user your@gmail.com --pass yourapppass --to test@example.com --subject "Debug" --text "Debug test"
+```
+
+### **Advanced Options**
+
+```bash
+# Custom headers and message ID
+senderwolf --provider gmail --user your@gmail.com --pass yourapppass --to user@example.com --subject "Advanced" --html "<h1>Hello</h1>" --headers '{"X-Custom":"Value"}' --message-id "<custom@example.com>"
+
+# OAuth2 authentication
+senderwolf --provider gmail --user your@gmail.com --auth-type oauth2 --pass "oauth-token" --to user@example.com --subject "OAuth2" --text "Secure email"
+
+# Custom SMTP server
+senderwolf --host smtp.mycompany.com --port 587 --secure false --require-tls --user admin@mycompany.com --pass password --to user@example.com --subject "Custom SMTP" --text "Hello"
+```
+
+---
+
+## 📚 Examples & Documentation
+
+- **[examples.js](examples.js)** - Comprehensive usage examples
+- **[ADDING-PROVIDERS.md](ADDING-PROVIDERS.md)** - Guide for adding new email providers
+- **Configuration examples** for all major providers
+- **Error handling patterns** and troubleshooting
+
+---
+
+## 🔧 Advanced Features
+
+### **Bulk Email Sending**
+
+```js
+const mailer = createMailer({
+	/* config */
+});
+
+const recipients = [
+	"user1@example.com",
+	"user2@example.com",
+	"user3@example.com",
+];
+const results = await mailer.sendBulk(
+	recipients,
+	"Newsletter",
+	"<h1>Monthly Update</h1>"
+);
+
+results.forEach((result) => {
+	console.log(`${result.recipient}: ${result.success ? "Sent" : "Failed"}`);
+});
+```
+
+### **Custom Error Handling**
+
+```js
+try {
+	await sendEmail({
+		/* config */
+	});
+} catch (error) {
+	if (error.message.includes("authentication")) {
+		console.log("Check your credentials");
+	} else if (error.message.includes("connection")) {
+		console.log("Check your network/firewall");
+	}
+}
+```
+
+### **Provider Management**
+
+```js
+import { registerProvider, hasProvider, getAllProviders } from "senderwolf";
+
+// Add new provider
+registerProvider("newservice", { host: "smtp.newservice.com", port: 587 });
+
+// Check if provider exists
+console.log(hasProvider("newservice")); // true
+
+// Get all provider configurations
+console.log(getAllProviders());
+```
+
+---
+
+## 🔒 Security Best Practices
+
+1. **Use App Passwords** for Gmail (not your main password)
+2. **Use OAuth2** for production applications
+3. **Store credentials** in environment variables or config files
+4. **Enable 2FA** on your email accounts
+5. **Use STARTTLS** when available (`requireTLS: true`)
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Whether it's:
+
+- Adding new email provider presets
+- Improving documentation
+- Fixing bugs
+- Adding features
+
+See our [contribution guidelines](CONTRIBUTING.md) and [provider addition guide](ADDING-PROVIDERS.md).
+
+---
+
+## 📄 License
 
 MIT © 2025 [Chandraprakash](https://github.com/Chandraprakash-03)
+
+---
+
+## 🌟 Why Senderwolf?
+
+- **🚀 Faster development** - Less time configuring, more time building
+- **🧠 Lower cognitive load** - Intuitive API that just makes sense
+- **🔧 Future-proof** - Easily add any new email provider
+- **📦 Lightweight** - Zero unnecessary dependencies
+- **🛡️ Reliable** - Built on Node.js native modules
+- **📚 Well-documented** - Clear examples and guides
+
+**Ready to simplify your email sending?** Install senderwolf today!
+
+```bash
+npm install senderwolf
+```
+
+---
+
+<div align="center">
+
+**[🌐 Website](https://senderwolf.vercel.app)** • **[📖 Documentation](https://github.com/Chandraprakash-03/senderwolf)** • **[🐛 Issues](https://github.com/Chandraprakash-03/senderwolf/issues)** • **[💬 Discussions](https://github.com/Chandraprakash-03/senderwolf/discussions)**
+
+Made with ❤️ for developers who value simplicity
+
+</div>

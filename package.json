@@ -1,19 +1,26 @@
 {
     "name": "senderwolf",
-    "version": "3.0.0",
-    "description": "Standalone SMTP library - send emails without dependencies like nodemailer",
+    "version": "3.1.0",
+    "description": "The simplest way to send emails in Node.js - a true nodemailer alternative with zero learning curve",
     "main": "index.js",
     "bin": {
         "senderwolf": "./bin/index.js"
     },
     "type": "module",
     "keywords": [
-        "gmail",
         "email",
         "smtp",
         "mailer",
-        "senderwolf",
-        "standalone"
+        "nodemailer",
+        "alternative",
+        "gmail",
+        "outlook",
+        "sendgrid",
+        "mailgun",
+        "oauth2",
+        "simple",
+        "lightweight",
+        "senderwolf"
     ],
     "author": "Chandraprakash",
     "license": "MIT",
