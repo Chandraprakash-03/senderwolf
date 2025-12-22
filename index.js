@@ -1,5 +1,5 @@
 // Main email sending function
-export { sendEmail } from './lib/sendEmail.js';
+export { sendEmail, closeAllPools, getPoolStats } from './lib/sendEmail.js';
 
 // Simple API for easier usage
 export {

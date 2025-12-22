@@ -1,7 +1,7 @@
 {
     "name": "senderwolf",
-    "version": "3.1.0",
-    "description": "The simplest way to send emails in Node.js - a true nodemailer alternative with zero learning curve",
+    "version": "3.2.0",
+    "description": "The simplest way to send emails in Node.js - a true nodemailer alternative with zero learning curve and built-in connection pooling",
     "main": "index.js",
     "bin": {
         "senderwolf": "./bin/index.js"
@@ -20,10 +20,16 @@
         "oauth2",
         "simple",
         "lightweight",
-        "senderwolf"
+        "senderwolf",
+        "connection-pooling",
+        "bulk-email",
+        "high-performance",
+        "email-pool",
+        "smtp-pool"
     ],
     "author": "Chandraprakash",
     "license": "MIT",
+    "scripts": {},
     "dependencies": {
         "chalk": "^5.4.1",
         "commander": "^14.0.0",
@@ -31,10 +37,15 @@
         "inquirer": "^12.9.0",
         "zod": "^3.22.2"
     },
+    "devDependencies": {},
     "files": [
         "lib",
         "bin",
-        "index.js"
+        "index.js",
+        "examples",
+        "CHANGELOG.md",
+        "README.md",
+        "LICENSE"
     ],
     "repository": {
         "type": "git",
