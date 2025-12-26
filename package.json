@@ -1,10 +1,10 @@
 {
     "name": "senderwolf",
-    "version": "3.2.0",
+    "version": "3.2.1",
     "description": "The simplest way to send emails in Node.js - a true nodemailer alternative with zero learning curve and built-in connection pooling",
     "main": "index.js",
     "bin": {
-        "senderwolf": "./bin/index.js"
+        "senderwolf": "bin/index.js"
     },
     "type": "module",
     "keywords": [
@@ -49,7 +49,7 @@
     ],
     "repository": {
         "type": "git",
-        "url": "https://github.com/Chandraprakash-03/senderwolf"
+        "url": "git+https://github.com/Chandraprakash-03/senderwolf.git"
     },
     "bugs": {
         "url": "https://github.com/Chandraprakash-03/senderwolf/issues"
