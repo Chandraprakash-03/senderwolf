@@ -27,6 +27,7 @@
 - ✅ **Extensible architecture** - Add any SMTP provider instantly
 - ✅ **Full email features** - CC/BCC, attachments, custom headers, priority
 - ✅ **Clear error messages** - Actionable feedback for troubleshooting
+- ✅ **TypeScript support** - Complete type definitions with IntelliSense
 
 ---
 
@@ -37,6 +38,8 @@
 ```bash
 npm install senderwolf
 ```
+
+**TypeScript users**: Type definitions are included automatically!
 
 ### Send Your First Email (3 Ways)
 
@@ -93,6 +96,48 @@ const results = await mailer.sendBulk(
 	"<h1>Monthly Update</h1>"
 );
 ```
+
+---
+
+## 🔷 TypeScript Support
+
+Senderwolf includes comprehensive TypeScript support with full type definitions:
+
+```typescript
+import {
+	sendEmail,
+	createMailer,
+	type SendEmailConfig,
+	type Mailer,
+} from "senderwolf";
+
+// Type-safe configuration with IntelliSense
+const config: SendEmailConfig = {
+	smtp: {
+		provider: "gmail", // Auto-completion for providers
+		auth: {
+			user: "your@gmail.com",
+			pass: "app-password",
+			type: "login", // Only valid auth types allowed
+		},
+	},
+	mail: {
+		to: "recipient@example.com",
+		subject: "TypeScript Email",
+		html: "<h1>Fully typed!</h1>",
+		priority: "high", // Only 'high' | 'normal' | 'low' allowed
+	},
+};
+
+const result = await sendEmail(config); // Fully typed result
+```
+
+**Features:**
+
+- Complete type definitions for all functions and interfaces
+- IntelliSense support with auto-completion
+- Compile-time error checking
+- Rich JSDoc documentation in IDE tooltips
 
 ---
 

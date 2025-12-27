@@ -3,6 +3,7 @@
     "version": "3.2.1",
     "description": "The simplest way to send emails in Node.js - a true nodemailer alternative with zero learning curve and built-in connection pooling",
     "main": "index.js",
+    "types": "types/index.d.ts",
     "bin": {
         "senderwolf": "bin/index.js"
     },
@@ -25,7 +26,9 @@
         "bulk-email",
         "high-performance",
         "email-pool",
-        "smtp-pool"
+        "smtp-pool",
+        "typescript",
+        "types"
     ],
     "author": "Chandraprakash",
     "license": "MIT",
@@ -37,13 +40,12 @@
         "inquirer": "^12.9.0",
         "zod": "^3.22.2"
     },
-    "devDependencies": {},
     "files": [
         "lib",
         "bin",
+        "types",
         "index.js",
         "examples",
-        "CHANGELOG.md",
         "README.md",
         "LICENSE"
     ],

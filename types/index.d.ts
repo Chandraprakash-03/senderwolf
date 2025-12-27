@@ -1,0 +1,500 @@
+/**
+ * TypeScript definitions for senderwolf
+ * The simplest way to send emails in Node.js
+ */
+
+import { Readable } from "stream";
+
+// ============================================================================
+// Core Types
+// ============================================================================
+
+export interface EmailAddress {
+	name?: string;
+	address: string;
+}
+
+export type EmailRecipient = string | EmailAddress;
+export type EmailRecipients = EmailRecipient | EmailRecipient[];
+
+// ============================================================================
+// Authentication Types
+// ============================================================================
+
+export interface BasicAuth {
+	user: string;
+	pass: string;
+	type?: "login" | "plain";
+}
+
+export interface OAuth2Auth {
+	type: "oauth2";
+	user: string;
+	clientId: string;
+	clientSecret: string;
+	refreshToken: string;
+	accessToken?: string;
+}
+
+export interface XOAuth2Auth {
+	type: "xoauth2";
+	user: string;
+	accessToken: string;
+}
+
+export type AuthConfig = BasicAuth | OAuth2Auth | XOAuth2Auth;
+
+// ============================================================================
+// Attachment Types
+// ============================================================================
+
+export interface FileAttachment {
+	filename: string;
+	path: string;
+	contentType?: string;
+}
+
+export interface BufferAttachment {
+	filename: string;
+	content: Buffer | string;
+	contentType?: string;
+	encoding?: string;
+}
+
+export interface StreamAttachment {
+	filename: string;
+	content: Readable;
+	contentType?: string;
+}
+
+export type Attachment = FileAttachment | BufferAttachment | StreamAttachment;
+
+// ============================================================================
+// Connection Pool Types
+// ============================================================================
+
+export interface PoolConfig {
+	/** Maximum concurrent SMTP connections (default: 5) */
+	maxConnections?: number;
+	/** Messages per connection before rotation (default: 100) */
+	maxMessages?: number;
+	/** Rate limiting time window in ms (default: 1000) */
+	rateDelta?: number;
+	/** Max messages per rateDelta (default: 3) */
+	rateLimit?: number;
+	/** Connection idle timeout in ms (default: 30000) */
+	idleTimeout?: number;
+}
+
+export interface PoolStats {
+	activeConnections: number;
+	idleConnections: number;
+	queuedRequests: number;
+	messagesSent: number;
+	maxConnections: number;
+}
+
+// ============================================================================
+// SMTP Configuration Types
+// ============================================================================
+
+export interface SMTPConfig {
+	/** SMTP server hostname */
+	host?: string;
+	/** SMTP server port */
+	port?: number;
+	/** Use secure connection (SSL/TLS) */
+	secure?: boolean;
+	/** Require STARTTLS */
+	requireTLS?: boolean;
+	/** Ignore TLS certificate errors */
+	ignoreTLS?: boolean;
+	/** Authentication configuration */
+	auth: AuthConfig;
+	/** Connection timeout in ms (default: 60000) */
+	connectionTimeout?: number;
+	/** Greeting timeout in ms (default: 30000) */
+	greetingTimeout?: number;
+	/** Socket timeout in ms (default: 60000) */
+	socketTimeout?: number;
+	/** Enable debug logging */
+	debug?: boolean;
+	/** Hostname for EHLO command */
+	name?: string;
+	/** Provider name (gmail, outlook, etc.) */
+	provider?: string;
+	/** Connection pool configuration */
+	pool?: PoolConfig;
+	/** Use connection pooling (default: true for createMailer) */
+	usePool?: boolean;
+}
+
+// ============================================================================
+// Mail Configuration Types
+// ============================================================================
+
+export interface MailConfig {
+	/** Sender email address */
+	from?: EmailRecipient;
+	/** Recipient email address(es) */
+	to: EmailRecipients;
+	/** CC recipient email address(es) */
+	cc?: EmailRecipients;
+	/** BCC recipient email address(es) */
+	bcc?: EmailRecipients;
+	/** Reply-to email address */
+	replyTo?: EmailRecipient;
+	/** Email subject */
+	subject: string;
+	/** HTML email content */
+	html?: string;
+	/** Plain text email content */
+	text?: string;
+	/** Custom email headers */
+	headers?: Record<string, string>;
+	/** Email priority */
+	priority?: "high" | "normal" | "low";
+	/** Sender name */
+	fromName?: string;
+	/** Sender email address */
+	fromEmail?: string;
+	/** Email attachments */
+	attachments?: Attachment[];
+	/** Text encoding (default: 'utf8') */
+	encoding?: string;
+	/** Email date */
+	date?: Date;
+	/** Custom message ID */
+	messageId?: string;
+}
+
+// ============================================================================
+// Main Configuration Types
+// ============================================================================
+
+export interface SendEmailConfig {
+	smtp?: SMTPConfig;
+	mail: MailConfig;
+}
+
+export interface MailerDefaults {
+	fromName?: string;
+	fromEmail?: string;
+	replyTo?: string;
+	headers?: Record<string, string>;
+	priority?: "high" | "normal" | "low";
+}
+
+export interface CreateMailerConfig {
+	smtp: SMTPConfig;
+	defaults?: MailerDefaults;
+}
+
+// ============================================================================
+// Response Types
+// ============================================================================
+
+export interface SendEmailResult {
+	success: boolean;
+	messageId?: string;
+	error?: string;
+}
+
+export interface BulkSendResult {
+	recipient: string;
+	success: boolean;
+	messageId?: string;
+	error?: string;
+}
+
+export interface TestConnectionResult {
+	success: boolean;
+	message: string;
+	messageId?: string;
+	error?: Error;
+}
+
+// ============================================================================
+// Provider Types
+// ============================================================================
+
+export interface ProviderConfig {
+	host: string;
+	port: number;
+	secure: boolean;
+	requireTLS?: boolean;
+	name: string;
+}
+
+export interface ProviderInfo {
+	name: string;
+	displayName: string;
+	host: string;
+	port: number;
+	secure: boolean;
+}
+
+export interface SMTPSuggestions {
+	suggestions: string[];
+	commonPorts: number[];
+	note: string;
+}
+
+// ============================================================================
+// Configuration File Types
+// ============================================================================
+
+export interface SenderwolfConfig {
+	provider?: string;
+	user?: string;
+	pass?: string;
+	host?: string;
+	port?: number;
+	secure?: boolean;
+	requireTLS?: boolean;
+	fromName?: string;
+	fromEmail?: string;
+	replyTo?: string;
+	debug?: boolean;
+	authType?: string;
+	pool?: PoolConfig;
+	usePool?: boolean;
+	customProviders?: Record<string, Partial<ProviderConfig>>;
+	customDomains?: Record<string, string>;
+}
+
+// ============================================================================
+// Mailer Instance Type
+// ============================================================================
+
+export interface Mailer {
+	/**
+	 * Send a simple email
+	 */
+	send(
+		options: Partial<MailConfig> & { smtp?: Partial<SMTPConfig> }
+	): Promise<SendEmailResult>;
+
+	/**
+	 * Send HTML email
+	 */
+	sendHtml(
+		to: EmailRecipients,
+		subject: string,
+		html: string,
+		options?: Partial<MailConfig>
+	): Promise<SendEmailResult>;
+
+	/**
+	 * Send text email
+	 */
+	sendText(
+		to: EmailRecipients,
+		subject: string,
+		text: string,
+		options?: Partial<MailConfig>
+	): Promise<SendEmailResult>;
+
+	/**
+	 * Send email with attachments
+	 */
+	sendWithAttachments(
+		to: EmailRecipients,
+		subject: string,
+		content: string,
+		attachments: Attachment[],
+		options?: Partial<MailConfig>
+	): Promise<SendEmailResult>;
+
+	/**
+	 * Send bulk emails (leverages connection pooling for efficiency)
+	 */
+	sendBulk(
+		recipients: string[],
+		subject: string,
+		content: string,
+		options?: Partial<MailConfig>
+	): Promise<BulkSendResult[]>;
+
+	/**
+	 * Close the connection pool for this mailer
+	 */
+	close(): Promise<void>;
+
+	/**
+	 * Get connection pool statistics
+	 */
+	getStats(): Promise<Record<string, PoolStats>>;
+}
+
+// ============================================================================
+// Main Functions
+// ============================================================================
+
+/**
+ * Send an email using any SMTP provider with enhanced features
+ */
+export function sendEmail(config: SendEmailConfig): Promise<SendEmailResult>;
+
+/**
+ * Create a reusable mailer instance with preset configuration
+ */
+export function createMailer(config: CreateMailerConfig): Mailer;
+
+/**
+ * Quick send functions for one-off emails
+ */
+export function quickSend(
+	provider: string,
+	user: string,
+	pass: string,
+	to: EmailRecipients,
+	subject: string,
+	content: string,
+	options?: Partial<MailConfig>
+): Promise<SendEmailResult>;
+
+/**
+ * Gmail shortcut
+ */
+export function sendGmail(
+	user: string,
+	pass: string,
+	to: EmailRecipients,
+	subject: string,
+	content: string,
+	options?: Partial<MailConfig>
+): Promise<SendEmailResult>;
+
+/**
+ * Outlook shortcut
+ */
+export function sendOutlook(
+	user: string,
+	pass: string,
+	to: EmailRecipients,
+	subject: string,
+	content: string,
+	options?: Partial<MailConfig>
+): Promise<SendEmailResult>;
+
+/**
+ * Test email connectivity
+ */
+export function testConnection(
+	config: SendEmailConfig
+): Promise<TestConnectionResult>;
+
+// ============================================================================
+// Provider Management Functions
+// ============================================================================
+
+/**
+ * Get provider configuration by name or auto-detect from email
+ */
+export function getProviderConfig(
+	providerOrEmail: string
+): ProviderConfig | null;
+
+/**
+ * Auto-detect provider based on email domain
+ */
+export function detectProvider(email: string): string | null;
+
+/**
+ * Register a new SMTP provider
+ */
+export function registerProvider(
+	name: string,
+	config: Partial<ProviderConfig>
+): ProviderConfig;
+
+/**
+ * Remove a provider
+ */
+export function unregisterProvider(name: string): void;
+
+/**
+ * Register a domain mapping to a provider
+ */
+export function registerDomain(domain: string, provider: string): void;
+
+/**
+ * Check if a provider exists
+ */
+export function hasProvider(name: string): boolean;
+
+/**
+ * Suggest SMTP settings for unknown domains
+ */
+export function suggestSMTPSettings(domain: string): SMTPSuggestions | null;
+
+/**
+ * List all available providers
+ */
+export function listProviders(): ProviderInfo[];
+
+/**
+ * Get all provider configurations
+ */
+export function getAllProviders(): Record<string, ProviderConfig>;
+
+// ============================================================================
+// Configuration Functions
+// ============================================================================
+
+/**
+ * Load configuration from file
+ */
+export function loadConfig(): Promise<SenderwolfConfig>;
+
+// ============================================================================
+// Pool Management Functions
+// ============================================================================
+
+/**
+ * Close all connection pools (useful for graceful shutdown)
+ */
+export function closeAllPools(): Promise<void>;
+
+/**
+ * Get statistics for all connection pools
+ */
+export function getPoolStats(): Record<string, PoolStats>;
+
+// ============================================================================
+// Constants
+// ============================================================================
+
+/**
+ * Built-in SMTP provider configurations
+ */
+export const SMTP_PROVIDERS: Record<string, ProviderConfig>;
+
+// ============================================================================
+// Default Export (for CommonJS compatibility)
+// ============================================================================
+
+declare const senderwolf: {
+	sendEmail: typeof sendEmail;
+	createMailer: typeof createMailer;
+	quickSend: typeof quickSend;
+	sendGmail: typeof sendGmail;
+	sendOutlook: typeof sendOutlook;
+	testConnection: typeof testConnection;
+	getProviderConfig: typeof getProviderConfig;
+	detectProvider: typeof detectProvider;
+	registerProvider: typeof registerProvider;
+	unregisterProvider: typeof unregisterProvider;
+	registerDomain: typeof registerDomain;
+	hasProvider: typeof hasProvider;
+	suggestSMTPSettings: typeof suggestSMTPSettings;
+	listProviders: typeof listProviders;
+	getAllProviders: typeof getAllProviders;
+	loadConfig: typeof loadConfig;
+	closeAllPools: typeof closeAllPools;
+	getPoolStats: typeof getPoolStats;
+	SMTP_PROVIDERS: typeof SMTP_PROVIDERS;
+};
+
+export default senderwolf;
