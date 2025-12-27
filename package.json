@@ -1,11 +1,12 @@
 {
     "name": "senderwolf",
-    "version": "3.2.1",
+    "version": "3.3.0",
     "description": "The simplest way to send emails in Node.js - a true nodemailer alternative with zero learning curve and built-in connection pooling",
     "main": "index.js",
     "types": "types/index.d.ts",
     "bin": {
-        "senderwolf": "bin/index.js"
+        "senderwolf": "bin/index.js",
+        "senderwolf-templates": "bin/templates.js"
     },
     "type": "module",
     "keywords": [

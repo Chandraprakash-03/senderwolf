@@ -8,7 +8,15 @@ export {
     sendGmail,
     sendOutlook,
     testConnection,
-    listProviders
+    listProviders,
+    registerTemplate,
+    getTemplate,
+    listTemplates,
+    removeTemplate,
+    previewTemplate,
+    loadTemplateFromFile,
+    saveTemplateToFile,
+    loadTemplatesFromDirectory
 } from './lib/simple.js';
 
 // Provider utilities
@@ -26,3 +34,11 @@ export {
 
 // Configuration utilities
 export { loadConfig } from './lib/config.js';
+
+// Template system
+export {
+    TemplateEngine,
+    EmailTemplate,
+    TemplateManager,
+    BUILTIN_TEMPLATES
+} from './lib/templates.js';

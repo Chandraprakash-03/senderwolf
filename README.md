@@ -7,14 +7,16 @@
 
 **Senderwolf** makes email sending **ridiculously simple**. Built from the ground up with an intuitive API, automatic provider detection, built-in connection pooling, and zero configuration for popular email services.
 
-## 🆕 What's New in v3.2.0
+## 🆕 What's New in v3.3.0
 
 - 🚀 **Built-in Connection Pooling** - 50-80% faster bulk email sending
 - ⚡ **High Performance** - Efficient connection reuse and management
 - 🔄 **Automatic Pool Management** - Smart connection rotation and cleanup
 - 📊 **Pool Monitoring** - Real-time statistics with `getPoolStats()`
 - 🛡️ **Rate Limiting** - Built-in protection against provider limits
-- 🔧 **Zero Breaking Changes** - Full backward compatibility
+- 📧 **Enhanced Template System** - 4 built-in templates with advanced features
+- 🔧 **CLI Tools** - Complete command-line interface for email sending and templates
+- 🛡️ **Zero Breaking Changes** - Full backward compatibility
 
 ## ✨ Key Features
 
@@ -26,6 +28,8 @@
 - ✅ **Modern authentication** - OAuth2, XOAUTH2, and traditional methods
 - ✅ **Extensible architecture** - Add any SMTP provider instantly
 - ✅ **Full email features** - CC/BCC, attachments, custom headers, priority
+- ✅ **Template system** - 4 built-in templates with variable substitution
+- ✅ **CLI tools** - Complete command-line interface for email and template management
 - ✅ **Clear error messages** - Actionable feedback for troubleshooting
 - ✅ **TypeScript support** - Complete type definitions with IntelliSense
 
@@ -138,6 +142,86 @@ const result = await sendEmail(config); // Fully typed result
 - IntelliSense support with auto-completion
 - Compile-time error checking
 - Rich JSDoc documentation in IDE tooltips
+
+---
+
+## 📧 Template System
+
+Senderwolf includes a powerful template system with built-in templates and custom template support:
+
+### **Built-in Templates**
+
+```js
+import { previewTemplate, listTemplates } from "senderwolf";
+
+// List all available templates
+console.log(listTemplates()); // welcome, passwordReset, notification, invoice
+
+// Preview a template with variables
+const preview = previewTemplate("welcome", {
+	appName: "My App",
+	userName: "John Doe",
+	verificationUrl: "https://myapp.com/verify",
+});
+
+console.log(preview.subject); // "Welcome to My App!"
+console.log(preview.html); // Rendered HTML
+```
+
+### **Custom Templates**
+
+```js
+import { registerTemplate, createMailer } from "senderwolf";
+
+// Register a custom template
+registerTemplate('order-confirmation', {
+  subject: 'Order #{{orderNumber}} Confirmed',
+  html: `
+    <h1>Thank you {{customerName}}!</h1>
+    <p>Your order #{{orderNumber}} has been confirmed.</p>
+    <ul>
+      {{#each items}}
+      <li>{{this.name}}: ${{this.price}}</li>
+      {{/each}}
+    </ul>
+    <p>Total: ${{totalAmount}}</p>
+  `,
+  description: 'Order confirmation email',
+  category: 'ecommerce'
+});
+
+// Use template in email
+const mailer = createMailer({ /* config */ });
+await mailer.sendTemplate('order-confirmation', 'customer@example.com', {
+  customerName: 'John Doe',
+  orderNumber: '12345',
+  items: [
+    { name: 'Product 1', price: '29.99' },
+    { name: 'Product 2', price: '39.99' }
+  ],
+  totalAmount: '69.98'
+});
+```
+
+### **Template CLI**
+
+```bash
+# List all templates
+senderwolf-templates list
+
+# Show template details
+senderwolf-templates show welcome
+
+# Preview template with data
+senderwolf-templates preview welcome --variables '{"appName":"MyApp","userName":"John"}'
+
+# Create new template interactively
+senderwolf-templates create
+
+# Save/load templates from files
+senderwolf-templates save welcome ./templates/welcome.json
+senderwolf-templates load ./templates/welcome.json
+```
 
 ---
 
@@ -469,29 +553,36 @@ console.log(suggestSMTPSettings("newcompany.com"));
 
 ## 🚀 CLI Usage
 
-### **Basic Commands**
+Senderwolf includes comprehensive command-line tools for both email sending and template management.
+
+### **Email CLI (`senderwolf`)**
+
+#### **Basic Commands**
 
 ```bash
 # Simple email with auto-detection
-senderwolf --user your@gmail.com --pass yourapppass --to someone@example.com --subject "Hello" --html "<h1>World!</h1>"
+senderwolf --user your@gmail.com --pass yourapppass \
+  --to someone@example.com --subject "Hello" --html "<h1>World!</h1>"
 
 # Use provider preset
-senderwolf --provider gmail --user your@gmail.com --pass yourapppass --to person@xyz.com --subject "Hello" --html ./email.html
+senderwolf --provider gmail --user your@gmail.com --pass yourapppass \
+  --to person@xyz.com --subject "Hello" --html ./email.html
 
 # Multiple recipients with CC/BCC
-senderwolf --user your@outlook.com --pass password --to "user1@example.com,user2@example.com" --cc manager@example.com --bcc audit@example.com --subject "Team Update" --html "<h1>Update</h1>"
-
-# With attachments and priority
-senderwolf --provider sendgrid --user apikey --pass your-api-key --to customer@example.com --subject "Invoice" --html ./invoice.html --attachments "invoice.pdf,receipt.png" --priority high
+senderwolf --user your@outlook.com --pass password \
+  --to "user1@example.com,user2@example.com" \
+  --cc manager@example.com --bcc audit@example.com \
+  --subject "Team Update" --html "<h1>Update</h1>"
 
 # Interactive mode (guided setup)
 senderwolf --interactive
 
 # Dry run (preview without sending)
-senderwolf --dry-run --provider gmail --user your@gmail.com --pass yourapppass --to user@example.com --subject "Test" --html "<h1>Preview</h1>"
+senderwolf --dry-run --provider gmail --user your@gmail.com --pass yourapppass \
+  --to user@example.com --subject "Test" --html "<h1>Preview</h1>"
 ```
 
-### **Utility Commands**
+#### **Utility Commands**
 
 ```bash
 # Test SMTP connection
@@ -505,22 +596,38 @@ senderwolf --suggest mycompany.com
 
 # Show configuration file example
 senderwolf --config-example
-
-# Debug mode (detailed logging)
-senderwolf --debug --provider gmail --user your@gmail.com --pass yourapppass --to test@example.com --subject "Debug" --text "Debug test"
 ```
 
-### **Advanced Options**
+### **Template CLI (`senderwolf-templates`)**
 
 ```bash
-# Custom headers and message ID
-senderwolf --provider gmail --user your@gmail.com --pass yourapppass --to user@example.com --subject "Advanced" --html "<h1>Hello</h1>" --headers '{"X-Custom":"Value"}' --message-id "<custom@example.com>"
+# List all templates
+senderwolf-templates list
 
-# OAuth2 authentication
-senderwolf --provider gmail --user your@gmail.com --auth-type oauth2 --pass "oauth-token" --to user@example.com --subject "OAuth2" --text "Secure email"
+# Show template details
+senderwolf-templates show welcome
 
-# Custom SMTP server
-senderwolf --host smtp.mycompany.com --port 587 --secure false --require-tls --user admin@mycompany.com --pass password --to user@example.com --subject "Custom SMTP" --text "Hello"
+# Preview template with sample data
+senderwolf-templates preview welcome
+
+# Preview with custom variables
+senderwolf-templates preview welcome \
+  --variables '{"appName":"MyApp","userName":"John"}'
+
+# Create new template interactively
+senderwolf-templates create
+
+# Load template from file
+senderwolf-templates load ./my-template.json
+
+# Save template to file
+senderwolf-templates save welcome ./welcome-template.json
+
+# Remove template
+senderwolf-templates remove my-template --force
+
+# Validate template syntax
+senderwolf-templates validate welcome
 ```
 
 ---
@@ -528,7 +635,9 @@ senderwolf --host smtp.mycompany.com --port 587 --secure false --require-tls --u
 ## 📚 Examples & Documentation
 
 - **[examples.js](examples.js)** - Comprehensive usage examples
+- **[examples/](examples/)** - Real-world example scripts
 - **[ADDING-PROVIDERS.md](ADDING-PROVIDERS.md)** - Guide for adding new email providers
+- **[TEMPLATES.md](TEMPLATES.md)** - Complete template system documentation
 - **Configuration examples** for all major providers
 - **Error handling patterns** and troubleshooting
 
@@ -536,9 +645,9 @@ senderwolf --host smtp.mycompany.com --port 587 --secure false --require-tls --u
 
 ## 🔧 Advanced Features
 
-### **🚀 Connection Pooling** (High Performance - NEW in v3.2.0!)
+### **🔧 Connection Pooling** (High Performance)
 
-Senderwolf includes built-in connection pooling similar to nodemailer for efficient bulk email sending:
+Senderwolf includes built-in connection pooling for efficient bulk email sending:
 
 ```js
 import { sendEmail, createMailer } from "senderwolf";
@@ -597,14 +706,14 @@ await closeAllPools();
 **Performance Comparison:**
 
 ```js
-// Before v3.2.0: Sequential sending (slower)
+// Before: Sequential sending (slower)
 for (const recipient of recipients) {
 	await sendEmail({
 		/* config */
 	}); // New connection each time
 }
 
-// v3.2.0: Connection pooling (50-80% faster!)
+// Now: Connection pooling (50-80% faster!)
 const mailer = createMailer({
 	/* config */
 });
@@ -701,9 +810,11 @@ MIT © 2025 [Chandraprakash](https://github.com/Chandraprakash-03)
 - **🚀 Faster development** - Less time configuring, more time building
 - **⚡ High performance** - Built-in connection pooling for 50-80% faster bulk sending
 - **🧠 Lower cognitive load** - Intuitive API that just makes sense
-- **� Fiuture-proof** - Easily add any new email provider
-- **� Lightweig\*ht** - Zero unnecessary dependencies
-- **�️ Reliabcle** - Built on Node.js native modules with robust error handling
+- **🔮 Future-proof** - Easily add any new email provider
+- **🪶 Lightweight** - Zero unnecessary dependencies
+- **🛡️ Reliable** - Built on Node.js native modules with robust error handling
+- **📧 Template system** - Built-in templates with advanced variable substitution
+- **🔧 CLI tools** - Complete command-line interface for all operations
 - **📚 Well-documented** - Clear examples and guides
 
 **Ready to simplify your email sending?** Install senderwolf today!

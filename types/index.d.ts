@@ -6,6 +6,51 @@
 import { Readable } from "stream";
 
 // ============================================================================
+// Template Types
+// ============================================================================
+
+export interface TemplateVariables {
+	[key: string]: any;
+}
+
+export interface RenderedTemplate {
+	subject: string;
+	html: string;
+	text: string;
+}
+
+export interface EmailTemplateConfig {
+	subject?: string;
+	html?: string;
+	text?: string;
+	variables?: string[];
+	description?: string;
+	category?: string;
+	created?: Date;
+	updated?: Date;
+}
+
+export interface EmailTemplate {
+	name: string;
+	subject: string;
+	html: string;
+	text: string;
+	variables: string[];
+	description: string;
+	category: string;
+	created: Date;
+	updated: Date;
+	render(variables?: TemplateVariables): RenderedTemplate;
+	validate(): { valid: boolean; errors: string[] };
+	toJSON(): EmailTemplateConfig & { name: string };
+}
+
+export interface TemplateValidationResult {
+	valid: boolean;
+	errors: string[];
+}
+
+// ============================================================================
 // Core Types
 // ============================================================================
 
@@ -317,6 +362,34 @@ export interface Mailer {
 	): Promise<BulkSendResult[]>;
 
 	/**
+	 * Send email using a template
+	 */
+	sendTemplate(
+		templateName: string,
+		to: EmailRecipients,
+		variables?: TemplateVariables,
+		options?: Partial<MailConfig>
+	): Promise<SendEmailResult>;
+
+	/**
+	 * Send bulk emails using a template
+	 */
+	sendBulkTemplate(
+		templateName: string,
+		recipients: string[],
+		variables?: TemplateVariables | ((recipient: string) => TemplateVariables),
+		options?: Partial<MailConfig>
+	): Promise<BulkSendResult[]>;
+
+	/**
+	 * Preview a template with variables (without sending)
+	 */
+	previewTemplate(
+		templateName: string,
+		variables?: TemplateVariables
+	): RenderedTemplate;
+
+	/**
 	 * Close the connection pool for this mailer
 	 */
 	close(): Promise<void>;
@@ -463,6 +536,111 @@ export function closeAllPools(): Promise<void>;
 export function getPoolStats(): Record<string, PoolStats>;
 
 // ============================================================================
+// Template Management Functions
+// ============================================================================
+
+/**
+ * Register a new email template
+ */
+export function registerTemplate(
+	name: string,
+	config: EmailTemplateConfig
+): EmailTemplate;
+
+/**
+ * Get a template by name
+ */
+export function getTemplate(name: string): EmailTemplate | null;
+
+/**
+ * List all templates, optionally filtered by category
+ */
+export function listTemplates(category?: string): EmailTemplate[];
+
+/**
+ * Remove a template
+ */
+export function removeTemplate(name: string): boolean;
+
+/**
+ * Preview a template with variables (without sending)
+ */
+export function previewTemplate(
+	templateName: string,
+	variables?: TemplateVariables
+): RenderedTemplate;
+
+/**
+ * Load template(s) from a JSON file
+ */
+export function loadTemplateFromFile(
+	filePath: string
+): Promise<EmailTemplate | EmailTemplate[]>;
+
+/**
+ * Save a template to a JSON file
+ */
+export function saveTemplateToFile(
+	name: string,
+	filePath: string
+): Promise<string>;
+
+/**
+ * Load all templates from a directory
+ */
+export function loadTemplatesFromDirectory(
+	dirPath: string
+): Promise<EmailTemplate[]>;
+
+// ============================================================================
+// Template Engine Classes
+// ============================================================================
+
+/**
+ * Template Engine for compiling templates with variables
+ */
+export class TemplateEngine {
+	static compile(template: string, variables?: TemplateVariables): string;
+	static extractVariables(template: string): string[];
+}
+
+/**
+ * Email Template class
+ */
+export class EmailTemplate {
+	constructor(name: string, config: EmailTemplateConfig);
+	render(variables?: TemplateVariables): RenderedTemplate;
+	validate(): TemplateValidationResult;
+	toJSON(): EmailTemplateConfig & { name: string };
+	static fromJSON(data: EmailTemplateConfig & { name: string }): EmailTemplate;
+}
+
+/**
+ * Template Manager for registration and management
+ */
+export class TemplateManager {
+	static registerTemplate(
+		name: string,
+		config: EmailTemplateConfig
+	): EmailTemplate;
+	static getTemplate(name: string): EmailTemplate | null;
+	static hasTemplate(name: string): boolean;
+	static listTemplates(category?: string): EmailTemplate[];
+	static getCategories(): string[];
+	static removeTemplate(name: string): boolean;
+	static updateTemplate(
+		name: string,
+		config: Partial<EmailTemplateConfig>
+	): EmailTemplate;
+	static loadFromFile(
+		filePath: string
+	): Promise<EmailTemplate | EmailTemplate[]>;
+	static saveToFile(name: string, filePath: string): Promise<string>;
+	static loadFromDirectory(dirPath: string): Promise<EmailTemplate[]>;
+	static clearAll(): void;
+}
+
+// ============================================================================
 // Constants
 // ============================================================================
 
@@ -470,6 +648,14 @@ export function getPoolStats(): Record<string, PoolStats>;
  * Built-in SMTP provider configurations
  */
 export const SMTP_PROVIDERS: Record<string, ProviderConfig>;
+
+/**
+ * Built-in email templates
+ */
+export const BUILTIN_TEMPLATES: Record<
+	string,
+	EmailTemplateConfig & { name: string }
+>;
 
 // ============================================================================
 // Default Export (for CommonJS compatibility)
@@ -494,7 +680,19 @@ declare const senderwolf: {
 	loadConfig: typeof loadConfig;
 	closeAllPools: typeof closeAllPools;
 	getPoolStats: typeof getPoolStats;
+	registerTemplate: typeof registerTemplate;
+	getTemplate: typeof getTemplate;
+	listTemplates: typeof listTemplates;
+	removeTemplate: typeof removeTemplate;
+	previewTemplate: typeof previewTemplate;
+	loadTemplateFromFile: typeof loadTemplateFromFile;
+	saveTemplateToFile: typeof saveTemplateToFile;
+	loadTemplatesFromDirectory: typeof loadTemplatesFromDirectory;
+	TemplateEngine: typeof TemplateEngine;
+	EmailTemplate: typeof EmailTemplate;
+	TemplateManager: typeof TemplateManager;
 	SMTP_PROVIDERS: typeof SMTP_PROVIDERS;
+	BUILTIN_TEMPLATES: typeof BUILTIN_TEMPLATES;
 };
 
 export default senderwolf;

@@ -375,3 +375,349 @@ export {
     errorHandlingExample,
     configFileExample
 };
+
+// ============================================================================
+// 12. EMAIL TEMPLATES - Template-based email sending
+// ============================================================================
+
+async function templateExamples() {
+    console.log('\n📧 Email Templates Examples\n');
+
+    // Create mailer for template examples
+    const mailer = createMailer({
+        smtp: {
+            provider: 'gmail',
+            auth: {
+                user: 'your@gmail.com',
+                pass: 'your-app-password'
+            }
+        },
+        defaults: {
+            fromName: 'My App',
+            fromEmail: 'your@gmail.com'
+        }
+    });
+
+    // Example 1: Using built-in welcome template
+    console.log('1. Built-in Welcome Template:');
+    try {
+        const result = await mailer.sendTemplate('welcome', 'user@example.com', {
+            appName: 'My Awesome App',
+            userName: 'John Doe',
+            verificationRequired: true,
+            verificationUrl: 'https://myapp.com/verify?token=abc123'
+        });
+        console.log('✅ Welcome email sent:', result.messageId);
+    } catch (error) {
+        console.log('❌ Error:', error.message);
+    }
+
+    // Example 2: Using built-in password reset template
+    console.log('\n2. Built-in Password Reset Template:');
+    try {
+        const result = await mailer.sendTemplate('passwordReset', 'user@example.com', {
+            appName: 'My Awesome App',
+            userName: 'John Doe',
+            resetUrl: 'https://myapp.com/reset?token=xyz789',
+            expirationTime: '30'
+        });
+        console.log('✅ Password reset email sent:', result.messageId);
+    } catch (error) {
+        console.log('❌ Error:', error.message);
+    }
+
+    // Example 3: Creating and using custom template
+    console.log('\n3. Custom Template:');
+    try {
+        // Register custom template
+        registerTemplate('orderConfirmation', {
+            subject: 'Order #{{orderNumber}} Confirmed - {{companyName}}',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h1 style="color: #28a745;">Order Confirmed!</h1>
+                    <p>Hi {{customerName}},</p>
+                    <p>Thank you for your order! Here are the details:</p>
+                    
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0;">
+                        <h3>Order #{{orderNumber}}</h3>
+                        <p><strong>Date:</strong> {{orderDate}}</p>
+                        <p><strong>Total:</strong> ${{ totalAmount }}</p>
+                    </div>
+                    
+                    <h4>Items:</h4>
+                    <ul>
+                        {{#each items}}
+                        <li>{{this.name}} - Qty: {{this.quantity}} - ${{ this.price }}</li>
+                        {{/each}}
+                    </ul>
+                    
+                    {{#if shippingAddress}}
+                    <h4>Shipping Address:</h4>
+                    <p>{{shippingAddress}}</p>
+                    {{/if}}
+                    
+                    <p>We'll send you tracking information once your order ships.</p>
+                    <p>Best regards,<br>{{companyName}} Team</p>
+                </div>
+            `,
+            text: `
+                Order Confirmed!
+                
+                Hi {{customerName}},
+                
+                Thank you for your order! Here are the details:
+                
+                Order #{{orderNumber}}
+                Date: {{orderDate}}
+                Total: ${{ totalAmount }}
+                
+                Items:
+                {{#each items}}
+                - {{this.name}} - Qty: {{this.quantity}} - ${{ this.price }}
+                {{/each}}
+                
+                {{#if shippingAddress}}
+                Shipping Address:
+                {{shippingAddress}}
+                {{/if}}
+                
+                We'll send you tracking information once your order ships.
+                
+                Best regards,
+                {{companyName}} Team
+            `,
+            description: 'Order confirmation email',
+            category: 'ecommerce'
+        });
+
+        // Use the custom template
+        const result = await mailer.sendTemplate('orderConfirmation', 'customer@example.com', {
+            customerName: 'Jane Smith',
+            orderNumber: 'ORD-12345',
+            orderDate: '2025-01-15',
+            totalAmount: '149.99',
+            companyName: 'Demo Store',
+            shippingAddress: '123 Main St, Anytown, ST 12345',
+            items: [
+                { name: 'Wireless Headphones', quantity: 1, price: '99.99' },
+                { name: 'Phone Case', quantity: 2, price: '25.00' }
+            ]
+        });
+        console.log('✅ Order confirmation sent:', result.messageId);
+    } catch (error) {
+        console.log('❌ Error:', error.message);
+    }
+
+    // Example 4: Template preview (without sending)
+    console.log('\n4. Template Preview:');
+    try {
+        const preview = mailer.previewTemplate('notification', {
+            title: 'System Maintenance Notice',
+            userName: 'John Doe',
+            message: 'We will be performing scheduled maintenance tonight from 2-4 AM EST.',
+            actionRequired: true,
+            actionUrl: 'https://example.com/maintenance',
+            actionText: 'View Details',
+            senderName: 'System Admin'
+        });
+
+        console.log('Subject:', preview.subject);
+        console.log('HTML Preview (first 200 chars):', preview.html.substring(0, 200) + '...');
+    } catch (error) {
+        console.log('❌ Error:', error.message);
+    }
+
+    // Example 5: Bulk template sending
+    console.log('\n5. Bulk Template Sending:');
+    try {
+        const recipients = ['user1@example.com', 'user2@example.com', 'user3@example.com'];
+
+        // Send same template to multiple recipients with different variables
+        const results = await mailer.sendBulkTemplate('notification', recipients, (recipient) => ({
+            title: 'Welcome to Our Newsletter',
+            userName: `User ${recipients.indexOf(recipient) + 1}`,
+            message: `Welcome to our newsletter! You're receiving this at ${recipient}.`,
+            actionRequired: true,
+            actionUrl: 'https://example.com/welcome',
+            actionText: 'Get Started',
+            senderName: 'Newsletter Team'
+        }));
+
+        results.forEach(result => {
+            if (result.success) {
+                console.log(`✅ Sent to ${result.recipient}: ${result.messageId}`);
+            } else {
+                console.log(`❌ Failed to send to ${result.recipient}: ${result.error}`);
+            }
+        });
+    } catch (error) {
+        console.log('❌ Error:', error.message);
+    }
+
+    // Example 6: List available templates
+    console.log('\n6. Available Templates:');
+    const templates = listTemplates();
+    console.log('All templates:');
+    templates.forEach(template => {
+        console.log(`  - ${template.name} (${template.category}): ${template.description}`);
+    });
+
+    // List by category
+    console.log('\nAuthentication templates:');
+    const authTemplates = listTemplates('authentication');
+    authTemplates.forEach(template => {
+        console.log(`  - ${template.name}: ${template.description}`);
+    });
+
+    // Example 7: Template with conditional content
+    console.log('\n7. Conditional Template:');
+    try {
+        registerTemplate('conditionalWelcome', {
+            subject: 'Welcome{{#if isPremium}} Premium{{/if}} User!',
+            html: `
+                <h1>Welcome {{userName}}!</h1>
+                
+                {{#if isPremium}}
+                <div style="background: gold; padding: 15px; border-radius: 5px;">
+                    <h3>🌟 Premium Member Benefits</h3>
+                    <ul>
+                        <li>Priority Support</li>
+                        <li>Advanced Features</li>
+                        <li>Monthly Reports</li>
+                    </ul>
+                </div>
+                {{/if}}
+                
+                {{#unless hasCompletedProfile}}
+                <div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin-top: 15px;">
+                    <p>⚠️ Please complete your profile to get started.</p>
+                    <a href="{{profileUrl}}" style="background: #007bff; color: white; padding: 8px 16px; text-decoration: none; border-radius: 3px;">Complete Profile</a>
+                </div>
+                {{/unless}}
+                
+                <h3>Your Benefits:</h3>
+                <ul>
+                    {{#each benefits}}
+                    <li>{{this}}</li>
+                    {{/each}}
+                </ul>
+            `,
+            description: 'Welcome email with conditional content',
+            category: 'authentication'
+        });
+
+        // Test with premium user
+        const premiumPreview = previewTemplate('conditionalWelcome', {
+            userName: 'Alice Premium',
+            isPremium: true,
+            hasCompletedProfile: true,
+            profileUrl: 'https://example.com/profile',
+            benefits: ['Priority Support', 'Advanced Features', 'Monthly Reports']
+        });
+        console.log('Premium user subject:', premiumPreview.subject);
+
+        // Test with regular user
+        const regularPreview = previewTemplate('conditionalWelcome', {
+            userName: 'Bob Regular',
+            isPremium: false,
+            hasCompletedProfile: false,
+            profileUrl: 'https://example.com/profile',
+            benefits: ['Basic Support', 'Standard Features']
+        });
+        console.log('Regular user subject:', regularPreview.subject);
+    } catch (error) {
+        console.log('❌ Error:', error.message);
+    }
+
+    console.log('\n✅ Template examples completed!');
+}
+
+// ============================================================================
+// 13. TEMPLATE MANAGEMENT - File operations and advanced features
+// ============================================================================
+
+async function templateManagementExamples() {
+    console.log('\n🗂️ Template Management Examples\n');
+
+    try {
+        // Example 1: Save template to file
+        console.log('1. Saving template to file:');
+        const { saveTemplateToFile } = await import('./index.js');
+
+        // Register a template first
+        registerTemplate('emailTemplate', {
+            subject: 'Sample Template',
+            html: '<h1>Hello {{name}}!</h1>',
+            description: 'Sample template for demo'
+        });
+
+        // Save to file (in real usage, you'd use a proper path)
+        try {
+            await saveTemplateToFile('emailTemplate', './sample-template.json');
+            console.log('✅ Template saved to file');
+        } catch (error) {
+            console.log('⚠️ File save demo skipped:', error.message);
+        }
+
+        // Example 2: Template validation
+        console.log('\n2. Template validation:');
+        const { getTemplate } = await import('./index.js');
+        const template = getTemplate('emailTemplate');
+        if (template) {
+            const validation = template.validate();
+            console.log(`Template validation: ${validation.valid ? 'PASSED' : 'FAILED'}`);
+            if (!validation.valid) {
+                validation.errors.forEach(error => console.log(`  - ${error}`));
+            }
+        }
+
+        // Example 3: Template categories
+        console.log('\n3. Template categories:');
+        const { TemplateManager } = await import('./index.js');
+        const categories = TemplateManager.getCategories();
+        console.log('Available categories:', categories.join(', '));
+
+        // Clean up
+        const { removeTemplate } = await import('./index.js');
+        removeTemplate('emailTemplate');
+
+    } catch (error) {
+        console.log('❌ Template management error:', error.message);
+    }
+}
+
+// ============================================================================
+// RUN ALL EXAMPLES
+// ============================================================================
+
+async function runAllExamples() {
+    console.log('🐺 Senderwolf Comprehensive Examples\n');
+    console.log('Note: These examples use placeholder credentials.');
+    console.log('Replace with your actual SMTP settings to send real emails.\n');
+
+    try {
+        // Run template examples
+        await templateExamples();
+        await templateManagementExamples();
+
+        console.log('\n🎉 All examples completed!');
+        console.log('\n📚 Key Features Demonstrated:');
+        console.log('  ✅ Built-in email templates (welcome, passwordReset, notification, invoice)');
+        console.log('  ✅ Custom template creation with handlebars-like syntax');
+        console.log('  ✅ Variable substitution and conditional rendering');
+        console.log('  ✅ Template preview without sending emails');
+        console.log('  ✅ Bulk template sending with per-recipient variables');
+        console.log('  ✅ Template management and file operations');
+        console.log('  ✅ Template validation and error handling');
+
+    } catch (error) {
+        console.error('❌ Example failed:', error.message);
+    }
+}
+
+// Export the new functions
+export {
+    templateExamples,
+    templateManagementExamples,
+    runAllExamples
+};
